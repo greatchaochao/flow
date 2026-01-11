@@ -6,13 +6,13 @@
 
 ---
 
-## 📋 Executive Summary
+##  Executive Summary
 
 This document outlines the development approach for building a Proof of Concept (PoC) cross-border FX and payment automation platform. The PoC validates technical feasibility and product desirability for UK SMEs using sandbox-only integrations.
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### Core Technologies
 - **Frontend:** Streamlit 1.30+
@@ -32,7 +32,7 @@ This document outlines the development approach for building a Proof of Concept 
 
 ---
 
-## 🗄️ Database Schema
+##  Database Schema
 
 ### Tables
 
@@ -181,79 +181,79 @@ CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
 
 ---
 
-## 🏗️ Application Architecture
+##  Application Architecture
 
 ### Directory Structure
 ```
 flow/
-├── .github/
-│   └── copilot-instructions.md
-├── app/
-│   ├── __init__.py
-│   ├── main.py                    # Streamlit entry point
-│   ├── config.py                  # Configuration management
-│   ├── database/
-│   │   ├── __init__.py
-│   │   ├── connection.py          # DB connection pool
-│   │   ├── models.py              # SQLAlchemy models
-│   │   └── migrations/            # Alembic migrations
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── auth_service.py        # Authentication logic
-│   │   ├── fx_service.py          # FX quote integration
-│   │   ├── payment_service.py     # Payment logic
-│   │   ├── beneficiary_service.py
-│   │   ├── approval_service.py
-│   │   └── notification_service.py
-│   ├── repositories/
-│   │   ├── __init__.py
-│   │   ├── user_repository.py
-│   │   ├── payment_repository.py
-│   │   ├── fx_repository.py
-│   │   └── audit_repository.py
-│   ├── integrations/
-│   │   ├── __init__.py
-│   │   ├── fx_provider.py         # Mock/sandbox FX API
-│   │   └── payment_provider.py    # Mock/sandbox payment API
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── validators.py          # IBAN/SWIFT validation
-│   │   ├── formatters.py
-│   │   └── security.py            # Password hashing
-│   └── ui/
-│       ├── __init__.py
-│       ├── pages/
-│       │   ├── 1_🏢_Company_Profile.py
-│       │   ├── 2_👥_Beneficiaries.py
-│       │   ├── 3_💱_FX_Quotes.py
-│       │   ├── 4_💰_Payments.py
-│       │   ├── 5_✅_Approvals.py
-│       │   └── 6_📊_Reports.py
-│       └── components/
-│           ├── auth.py
-│           ├── forms.py
-│           └── tables.py
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py
-│   ├── test_services/
-│   ├── test_repositories/
-│   └── test_integrations/
-├── scripts/
-│   ├── init_db.py                 # Database initialization
-│   └── seed_data.py               # Seed test data
-├── .env.example
-├── .gitignore
-├── requirements.txt
-├── pyproject.toml                 # Poetry config (optional)
-├── README.md
-├── DEVELOPMENT_PLAN.md
-└── docker-compose.yml             # PostgreSQL + optional pgAdmin
+ .github/
+    copilot-instructions.md
+ app/
+    __init__.py
+    main.py                    # Streamlit entry point
+    config.py                  # Configuration management
+    database/
+       __init__.py
+       connection.py          # DB connection pool
+       models.py              # SQLAlchemy models
+       migrations/            # Alembic migrations
+    services/
+       __init__.py
+       auth_service.py        # Authentication logic
+       fx_service.py          # FX quote integration
+       payment_service.py     # Payment logic
+       beneficiary_service.py
+       approval_service.py
+       notification_service.py
+    repositories/
+       __init__.py
+       user_repository.py
+       payment_repository.py
+       fx_repository.py
+       audit_repository.py
+    integrations/
+       __init__.py
+       fx_provider.py         # Mock/sandbox FX API
+       payment_provider.py    # Mock/sandbox payment API
+    utils/
+       __init__.py
+       validators.py          # IBAN/SWIFT validation
+       formatters.py
+       security.py            # Password hashing
+    ui/
+        __init__.py
+        pages/
+           1__Company_Profile.py
+           2__Beneficiaries.py
+           3__FX_Quotes.py
+           4__Payments.py
+           5__Approvals.py
+           6__Reports.py
+        components/
+            auth.py
+            forms.py
+            tables.py
+ tests/
+    __init__.py
+    conftest.py
+    test_services/
+    test_repositories/
+    test_integrations/
+ scripts/
+    init_db.py                 # Database initialization
+    seed_data.py               # Seed test data
+ .env.example
+ .gitignore
+ requirements.txt
+ pyproject.toml                 # Poetry config (optional)
+ README.md
+ DEVELOPMENT_PLAN.md
+ docker-compose.yml             # PostgreSQL + optional pgAdmin
 ```
 
 ---
 
-## 🔄 Development Phases
+##  Development Phases
 
 ### Phase 1: Foundation (Week 1)
 **Goal:** Set up core infrastructure
@@ -457,7 +457,7 @@ flow/
 
 ---
 
-## 🧪 Testing Strategy
+##  Testing Strategy
 
 ### Unit Tests
 - Service layer logic (FX calculation, approval rules)
@@ -482,7 +482,7 @@ flow/
 
 ---
 
-## 🔐 Security Considerations (PoC Level)
+##  Security Considerations (PoC Level)
 
 - Password hashing with bcrypt
 - Session management with Streamlit
@@ -496,7 +496,7 @@ flow/
 
 ---
 
-## 🚀 Deployment Approach
+##  Deployment Approach
 
 ### Local Development
 ```bash
@@ -535,7 +535,7 @@ streamlit run app/main.py
 
 ---
 
-## 📊 Success Metrics
+##  Success Metrics
 
 ### Technical
 - [ ] End-to-end payment flow completes successfully
@@ -556,7 +556,7 @@ streamlit run app/main.py
 
 ---
 
-## 🎯 Key Risks & Mitigations
+##  Key Risks & Mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
@@ -568,7 +568,7 @@ streamlit run app/main.py
 
 ---
 
-## 📝 Documentation Requirements
+##  Documentation Requirements
 
 1. **README.md** - Setup instructions, architecture overview
 2. **API_INTEGRATION.md** - Sandbox API configuration
@@ -578,7 +578,7 @@ streamlit run app/main.py
 
 ---
 
-## ⏱️ Timeline Summary
+## ⏱ Timeline Summary
 
 | Phase | Duration | Key Deliverable |
 |-------|----------|----------------|
@@ -597,7 +597,7 @@ streamlit run app/main.py
 
 ---
 
-## 🎬 Next Steps
+##  Next Steps
 
 1. Review and approve this plan
 2. Set up development environment
@@ -607,7 +607,7 @@ streamlit run app/main.py
 
 ---
 
-## 📞 Stakeholder Communication
+##  Stakeholder Communication
 
 - **Weekly demos** of completed phases
 - **Daily standups** (if team > 1)

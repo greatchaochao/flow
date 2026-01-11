@@ -17,7 +17,7 @@ def seed_database():
 
         # Create test company
         company = Company(
-            company_name="Acme Trading Ltd",
+            company_name="UK SMB Trading Ltd",
             registered_country="GB",
             industry_sector="Import/Export",
             fx_volume_band="medium",
@@ -30,19 +30,19 @@ def seed_database():
         # Create test users
         users_data = [
             {
-                "email": "admin@acme.com",
+                "email": "admin@uksmb.com",
                 "password": "admin123",
                 "full_name": "Admin User",
                 "role": "admin",
             },
             {
-                "email": "maker@acme.com",
+                "email": "maker@uksmb.com",
                 "password": "maker123",
                 "full_name": "Maker User",
                 "role": "maker",
             },
             {
-                "email": "approver@acme.com",
+                "email": "approver@uksmb.com",
                 "password": "approver123",
                 "full_name": "Approver User",
                 "role": "approver",
