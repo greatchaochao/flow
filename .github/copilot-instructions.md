@@ -1,6 +1,6 @@
 # Copilot Instructions
 
-## 📚 Required Context
+##  Required Context
 
 **Always reference these files when assisting with this project:**
 - [README.md](../README.md) - PoC objectives, functional scope, and project overview
@@ -10,7 +10,7 @@ These files contain critical context about the project's goals, architecture, ti
 
 ---
 
-## 🎯 Project Overview
+##  Project Overview
 
 **Cross-Border FX Digital Payment Automation Platform (PoC)**
 
@@ -21,7 +21,7 @@ These files contain critical context about the project's goals, architecture, ti
 
 ---
 
-## 🏗️ Key Architecture Principles
+##  Key Architecture Principles
 
 ### Technology Stack
 - **Frontend:** Streamlit for rapid prototyping
@@ -32,23 +32,41 @@ These files contain critical context about the project's goals, architecture, ti
 ### Directory Structure
 ```
 flow/
-├── app/
-│   ├── main.py                    # Streamlit entry point
-│   ├── config.py                  # Configuration management
-│   ├── database/                  # Models, connection, migrations
-│   ├── services/                  # Business logic layer
-│   ├── repositories/              # Data access layer
-│   ├── integrations/              # External API wrappers
-│   ├── utils/                     # Validators, formatters, security
-│   └── ui/                        # Streamlit pages & components
-├── tests/                         # pytest test suite
-├── scripts/                       # DB initialization & seeding
-└── .env                          # Environment variables (not in git)
+ app/
+    main.py                    # Streamlit entry point
+    config.py                  # Configuration management
+    database/                  # Models, connection, migrations
+    services/                  # Business logic layer
+    repositories/              # Data access layer
+    integrations/              # External API wrappers
+    utils/                     # Validators, formatters, security
+    ui/                        # Streamlit pages & components
+ tests/                         # pytest test suite
+ scripts/                       # DB initialization & seeding
+ .env                          # Environment variables (not in git)
 ```
 
 ---
 
-## 🎨 Code Style Guidelines
+## Code Style Guidelines
+
+### No Emojis Policy
+**CRITICAL:** Never use emoji characters in any part of the codebase:
+- No emojis in filenames
+- No emojis in code (strings, comments, docstrings)
+- No emojis in markdown files
+- No emojis in UI labels, titles, or buttons
+- No emojis in commit messages
+
+**Rationale:** This is a professional financial services platform. All interface elements must use clear, professional text only.
+
+### No Documentation Markdown Files Policy
+**CRITICAL:** Do NOT create markdown files to document or explain implementations unless explicitly requested:
+- Never create files like `CHANGES.md`, `IMPLEMENTATION.md`, `SUMMARY.md`, etc. without being asked
+- Do not create documentation files to summarize work or explain changes
+- Only create markdown files when the user specifically requests documentation
+
+**Rationale:** Keep the repository clean and focused. Documentation should be intentional, not automatic.
 
 ### Python
 - **Formatter:** Black (line length 88)
@@ -67,14 +85,14 @@ flow/
 - Use type hints with SQLAlchemy 2.0 style
 
 ### Streamlit Pages
-- Numbered prefix for navigation order: `1_🏢_Company_Profile.py`
+- Numbered prefix for navigation order: `1__Company_Profile.py`
 - Use `st.session_state` for state management
 - Implement proper error handling with `st.error()`
 - Add loading states with `st.spinner()`
 
 ---
 
-## 🔒 Security Best Practices
+##  Security Best Practices
 
 ### Authentication
 - Hash passwords with bcrypt (min 12 rounds)
@@ -96,7 +114,7 @@ flow/
 
 ---
 
-## 📊 Database Guidelines
+##  Database Guidelines
 
 ### Schema Design
 - Follow the schema defined in [DEVELOPMENT_PLAN.md](../DEVELOPMENT_PLAN.md)
@@ -124,7 +142,7 @@ alembic downgrade -1
 
 ---
 
-## 🧪 Testing Standards
+##  Testing Standards
 
 ### Test Coverage
 - Target: >60% for PoC
@@ -159,7 +177,7 @@ pytest tests/test_services/test_payment_service.py
 
 ---
 
-## 🚀 Development Workflow
+##  Development Workflow
 
 ### Before Starting Work
 1. Review [DEVELOPMENT_PLAN.md](../DEVELOPMENT_PLAN.md) for current phase
@@ -191,9 +209,9 @@ mypy app/
 
 ---
 
-## 🎯 PoC Scope Reminders
+##  PoC Scope Reminders
 
-### In Scope ✅
+### In Scope 
 - Sandbox-only integrations
 - Basic maker-checker workflow
 - FX quote transparency
@@ -201,7 +219,7 @@ mypy app/
 - Minimal audit logging
 - Email notifications (basic)
 
-### Out of Scope ❌
+### Out of Scope 
 - Production-grade reliability
 - Real funds movement
 - Full regulatory compliance (AML/KYC)
@@ -212,7 +230,7 @@ mypy app/
 
 ---
 
-## 💡 Common Patterns
+##  Common Patterns
 
 ### Service Layer Pattern
 ```python
@@ -242,21 +260,21 @@ class PaymentRepository:
 import streamlit as st
 from app.services import PaymentService
 
-st.set_page_config(page_title="Payments", page_icon="💰")
+st.set_page_config(page_title="Payments", page_icon="")
 
 # Authentication check
 if 'user_id' not in st.session_state:
     st.error("Please log in")
     st.stop()
 
-st.title("💰 Payments")
+st.title(" Payments")
 
 # Page logic here
 ```
 
 ---
 
-## 🐛 Error Handling
+##  Error Handling
 
 ### User-Facing Errors
 - Use `st.error()` for validation failures
@@ -282,7 +300,7 @@ except ExternalAPIError as e:
 
 ---
 
-## 📝 Documentation Requirements
+##  Documentation Requirements
 
 ### Code Documentation
 - Docstrings for all public functions/classes
@@ -313,7 +331,7 @@ def calculate_fx_amount(
 
 ---
 
-## 🔄 State Management (Streamlit)
+##  State Management (Streamlit)
 
 ### Session State Keys
 - `user_id`: Logged-in user ID
@@ -330,7 +348,7 @@ def calculate_fx_amount(
 
 ---
 
-## 🎬 Demo Preparation
+##  Demo Preparation
 
 ### Seed Data Requirements
 - 3 users (1 per role)
@@ -355,7 +373,7 @@ Follow the end-to-end journey in [README.md](../README.md):
 
 ---
 
-## ⚠️ Important Reminders
+##  Important Reminders
 
 1. **Always reference README.md and DEVELOPMENT_PLAN.md** for project context
 2. **This is a PoC** - prioritize rapid iteration over perfection
@@ -367,7 +385,7 @@ Follow the end-to-end journey in [README.md](../README.md):
 
 ---
 
-## 📞 Getting Help
+##  Getting Help
 
 - Check DEVELOPMENT_PLAN.md for technical decisions
 - Check README.md for scope questions

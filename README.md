@@ -9,7 +9,28 @@
 
 ---
 
-## 🚀 Overview
+##  Quick Start
+
+### Run the UI Demo
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the Streamlit app
+streamlit run app/main.py
+```
+
+**Demo Credentials:**
+- Admin: `admin@uksmb.com` / `admin123`
+- Maker: `maker@uksmb.com` / `maker123`
+- Approver: `approver@uksmb.com` / `approver123`
+
+ **Full instructions:** See [RUNNING_STREAMLIT.md](RUNNING_STREAMLIT.md)
+
+---
+
+##  Overview
 
 This Proof of Concept (PoC) validates the core workflow for a **cross-border FX and payment automation platform** targeting UK SMEs.
 
@@ -19,11 +40,30 @@ The PoC focuses on:
 - End-to-end payment lifecycle (sandbox)
 - Clear, auditable workflows
 
-⚠️ **This repository is not production-ready and must not be used with real funds.**
+ **This repository is not production-ready and must not be used with real funds.**
 
 ---
 
-## 🎯 PoC Objectives
+##  Current Status
+
+### Completed
+-  Complete UI implementation with Streamlit
+-  All 7 pages functional with mock data
+-  Role-based access control (Admin, Maker, Approver)
+-  Mock authentication and session management
+-  Database schema designed (SQLAlchemy models)
+-  Project structure and configuration
+
+### In Progress
+-  Backend service layer implementation
+-  Database integration
+-  Real authentication system
+-  FX provider API integration
+-  Payment provider API integration
+
+---
+
+##  PoC Objectives
 
 ### What We Are Proving
 
@@ -48,15 +88,15 @@ The PoC focuses on:
 
 The following are **intentionally excluded**:
 
-- ❌ Production reliability or SLAs  
-- ❌ Real funds movement  
-- ❌ Full compliance / regulatory framework  
-- ❌ Full accounting or ERP integrations  
-- ❌ Scalability or performance tuning  
+-  Production reliability or SLAs  
+-  Real funds movement  
+-  Full compliance / regulatory framework  
+-  Full accounting or ERP integrations  
+-  Scalability or performance tuning  
 
 ---
 
-## 🔁 End-to-End User Journey
+##  End-to-End User Journey
 
 1. User logs in  
 2. User creates a mock SME profile  
@@ -70,7 +110,7 @@ The following are **intentionally excluded**:
 
 ---
 
-## 🧩 Functional Scope
+##  Functional Scope
 
 ### Authentication & Roles
 - Email + password login
@@ -142,7 +182,7 @@ States: Draft → Pending Approval
 
 ---
 
-## ⚙️ Non-Functional Requirements
+##  Non-Functional Requirements
 
 - Business-hours availability
 - < 2–3s page load
@@ -153,7 +193,7 @@ States: Draft → Pending Approval
 
 ---
 
-## 🗄️ Minimal Data Model
+##  Minimal Data Model
 
 - users
 - companies
@@ -166,7 +206,7 @@ States: Draft → Pending Approval
 
 ---
 
-## 🏗️ High-Level Architecture
+##  High-Level Architecture
 
 - Web frontend (SPA)
 - Backend API
@@ -177,7 +217,7 @@ States: Draft → Pending Approval
 
 ---
 
-## ✅ Success Criteria
+##  Success Criteria
 
 - End-to-end workflow completes
 - FX quotes retrieved reliably
@@ -186,6 +226,6 @@ States: Draft → Pending Approval
 
 ---
 
-## ⚠️ Disclaimer
+##  Disclaimer
 
 This repository represents a **non-production Proof of Concept** and must not be used with real customers or real funds.
