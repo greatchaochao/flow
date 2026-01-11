@@ -68,6 +68,15 @@ flow/
 
 **Rationale:** Keep the repository clean and focused. Documentation should be intentional, not automatic.
 
+### Never Comment Out Code as a Fix
+**CRITICAL:** Do NOT comment out problematic code as a solution:
+- Never comment out dependencies, imports, or functionality to "fix" errors
+- Find the root cause and implement proper solutions (version updates, configuration changes, etc.)
+- If code needs to be temporarily disabled, explicitly discuss with the user first
+- Commenting out should only be for actual deprecated code removal, not error avoidance
+
+**Rationale:** The codebase must remain functional for future development. Commenting out code masks problems rather than solving them.
+
 ### Python
 - **Formatter:** Black (line length 88)
 - **Linter:** Flake8
