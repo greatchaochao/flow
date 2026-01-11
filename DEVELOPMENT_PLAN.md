@@ -515,7 +515,7 @@ alembic upgrade head
 python scripts/seed_data.py
 
 # Run Streamlit
-streamlit run app/main.py
+streamlit run main.py
 ```
 
 ### PoC Deployment Options

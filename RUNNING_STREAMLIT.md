@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 ```bash
 # Start the Streamlit server (from project root)
-PYTHONPATH=. streamlit run app/main.py
+streamlit run main.py
 ```
 
 The application will open automatically in your browser at `http://localhost:8501`
@@ -31,7 +31,7 @@ To allow other developers to access the app on your local network:
 
 ```bash
 # Run with network access enabled
-PYTHONPATH=. streamlit run app/main.py --server.address 0.0.0.0
+streamlit run main.py --server.address 0.0.0.0
 ```
 
 Then share your local IP address (e.g., `http://192.168.1.100:8501`)
@@ -182,7 +182,7 @@ cp .env.example .env
 If port 8501 is already in use:
 
 ```bash
-PYTHONPATH=. streamlit run app/main.py --server.port 8502
+streamlit run main.py --server.port 8502
 ```
 
 ### Dependencies Issues

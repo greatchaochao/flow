@@ -18,7 +18,7 @@
 pip install -r requirements.txt
 
 # Start the Streamlit app
-streamlit run app/main.py
+streamlit run main.py
 ```
 
 **Demo Credentials:**
