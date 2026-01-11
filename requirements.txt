@@ -33,4 +33,4 @@ mypy==1.8.0
 
 # Data Visualization (for reports)
 plotly==5.18.0
-pandas==2.1.4
+pandas>=2.2.0
