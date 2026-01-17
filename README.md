@@ -11,13 +11,28 @@
 
 ##  Quick Start
 
-### Run the UI Demo
+### Option 1: UI Demo Only (No Database)
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
 # Start the Streamlit app
+streamlit run main.py
+```
+
+### Option 2: Full Stack with Database (Phase 1)
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Start Docker Desktop
+
+# 3. Run database setup (creates schema + seed data)
+./setup.sh
+
+# 4. Start the Streamlit app
 streamlit run main.py
 ```
 
