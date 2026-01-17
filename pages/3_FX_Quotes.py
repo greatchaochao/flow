@@ -1,11 +1,14 @@
 """
-FX Quote Request Page
+FX Quotes Page
 """
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
+from decimal import Decimal
 import time
+from app.database.connection import SessionLocal
+from app.services.fx_service import FXService
 
 st.set_page_config(page_title="FX Quotes", page_icon="", layout="wide")
 
@@ -14,292 +17,193 @@ if not st.session_state.get("authenticated", False):
     st.error(" Please log in to access this page")
     st.stop()
 
-st.title(" FX Quote Engine")
-st.markdown("Get real-time foreign exchange quotes with transparent pricing")
+st.title(" FX Quotes")
 st.markdown("---")
 
-# Initialize session state for quote data
-if "current_quote" not in st.session_state:
-    st.session_state.current_quote = None
-if "quote_expiry" not in st.session_state:
-    st.session_state.quote_expiry = None
+# Get database session
+db = SessionLocal()
 
-# Two column layout
-col1, col2 = st.columns([2, 3])
+try:
+    fx_service = FXService(db)
 
-with col1:
+    # Get supported currencies
+    currencies = fx_service.get_supported_currencies()
+
+    # Request new quote section
     st.subheader(" Request FX Quote")
 
-    with st.form("fx_quote_form"):
-        source_currency = st.selectbox(
-            "From Currency *",
-            ["GBP - British Pound", "EUR - Euro", "USD - US Dollar"],
-            index=0,
-        )
+    with st.form("quote_request_form"):
+        col1, col2, col3 = st.columns(3)
 
-        target_currency = st.selectbox(
-            "To Currency *",
-            [
-                "EUR - Euro",
-                "USD - US Dollar",
-                "GBP - British Pound",
-                "CHF - Swiss Franc",
-            ],
-            index=0,
-        )
-
-        amount = st.number_input(
-            "Amount *",
-            min_value=100.0,
-            max_value=1000000.0,
-            value=10000.0,
-            step=100.0,
-            format="%.2f",
-        )
-
-        quote_type = st.radio(
-            "Quote Type",
-            ["I want to send this amount", "I want them to receive this amount"],
-            horizontal=False,
-        )
-
-        purpose = st.selectbox(
-            "Payment Purpose",
-            [
-                "Trade Payment",
-                "Invoice Settlement",
-                "Salary Payment",
-                "Service Fee",
-                "Other",
-            ],
-        )
-
-        submit = st.form_submit_button(" Get Quote", use_container_width=True)
-
-        if submit:
-            # Simulate getting a quote
-            with st.spinner("Fetching live FX rate..."):
-                time.sleep(1)  # Simulate API call
-
-                # Mock quote data
-                base_rate = 1.1650 if "EUR" in target_currency else 1.2850
-                markup = 0.005  # 0.5%
-                final_rate = base_rate * (1 + markup)
-
-                source_curr = source_currency.split(" - ")[0]
-                target_curr = target_currency.split(" - ")[0]
-
-                if quote_type == "I want to send this amount":
-                    source_amount = amount
-                    target_amount = amount * final_rate
-                else:
-                    target_amount = amount
-                    source_amount = amount / final_rate
-
-                fee = source_amount * 0.001  # 0.1% fee
-                total_debit = source_amount + fee
-
-                st.session_state.current_quote = {
-                    "quote_id": f"QT-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-                    "source_currency": source_curr,
-                    "target_currency": target_curr,
-                    "source_amount": source_amount,
-                    "target_amount": target_amount,
-                    "base_rate": base_rate,
-                    "markup": markup,
-                    "final_rate": final_rate,
-                    "fee": fee,
-                    "total_debit": total_debit,
-                    "created_at": datetime.now(),
-                }
-                st.session_state.quote_expiry = datetime.now() + timedelta(seconds=120)
-
-            st.success(" Quote retrieved successfully!")
-            st.rerun()
-
-with col2:
-    st.subheader(" Current Quote")
-
-    if st.session_state.current_quote:
-        quote = st.session_state.current_quote
-
-        # Check if quote is expired
-        if datetime.now() > st.session_state.quote_expiry:
-            st.error(" This quote has expired. Please request a new quote.")
-            st.session_state.current_quote = None
-            st.session_state.quote_expiry = None
-        else:
-            # Calculate remaining time
-            remaining_seconds = (
-                st.session_state.quote_expiry - datetime.now()
-            ).total_seconds()
-            remaining_time = (
-                f"{int(remaining_seconds // 60)}m {int(remaining_seconds % 60)}s"
+        with col1:
+            from_currency = st.selectbox(
+                "From Currency *",
+                options=currencies,
+                index=currencies.index("GBP") if "GBP" in currencies else 0,
             )
 
-            # Quote expiry warning
-            if remaining_seconds < 30:
-                st.warning(f"⏰ Quote expires in {remaining_time}")
+        with col2:
+            to_currency = st.selectbox(
+                "To Currency *",
+                options=currencies,
+                index=currencies.index("EUR") if "EUR" in currencies else 1,
+            )
+
+        with col3:
+            amount = st.number_input(
+                "Amount *", min_value=0.01, value=1000.00, step=100.00, format="%.2f"
+            )
+
+        st.caption(
+            f"Quote will be valid for {120} seconds. Markup: {fx_service.markup_percentage * 100:.2f}%"
+        )
+
+        submitted = st.form_submit_button(" Get Quote", use_container_width=True)
+
+        if submitted:
+            if from_currency == to_currency:
+                st.error("Source and target currencies must be different")
             else:
-                st.info(f"⏱ Quote valid for: {remaining_time}")
-
-            # Progress bar for quote expiry
-            progress = remaining_seconds / 120
-            st.progress(progress)
-
-            st.markdown("---")
-
-            # Quote details
-            st.markdown(f"**Quote ID:** `{quote['quote_id']}`")
-            st.markdown(
-                f"**Created:** {quote['created_at'].strftime('%Y-%m-%d %H:%M:%S')}"
-            )
-
-            st.markdown("---")
-
-            # Exchange rate display
-            col_a, col_b = st.columns(2)
-
-            with col_a:
-                st.metric(
-                    label=f"You Send ({quote['source_currency']})",
-                    value=f"{quote['source_currency']} {quote['source_amount']:,.2f}",
-                )
-
-            with col_b:
-                st.metric(
-                    label=f"They Receive ({quote['target_currency']})",
-                    value=f"{quote['target_currency']} {quote['target_amount']:,.2f}",
-                )
-
-            st.markdown("---")
-
-            # Rate breakdown
-            st.markdown("** Rate Breakdown**")
-
-            breakdown_df = pd.DataFrame(
-                {
-                    "Description": [
-                        "Base Exchange Rate",
-                        "Our Markup (0.5%)",
-                        "Final Exchange Rate",
-                        "Transaction Fee (0.1%)",
-                        "Total Amount to Debit",
-                    ],
-                    "Value": [
-                        f"{quote['base_rate']:.6f}",
-                        f"{quote['markup'] * 100:.2f}%",
-                        f"{quote['final_rate']:.6f}",
-                        f"{quote['source_currency']} {quote['fee']:.2f}",
-                        f"{quote['source_currency']} {quote['total_debit']:.2f}",
-                    ],
-                }
-            )
-
-            st.dataframe(breakdown_df, use_container_width=True, hide_index=True)
-
-            st.markdown("---")
-
-            # Action buttons
-            col1, col2 = st.columns(2)
-
-            with col1:
-                if st.button(" Use This Quote", use_container_width=True):
-                    st.success("Quote locked! Redirecting to payment creation...")
-                    time.sleep(1)
-                    st.info(
-                        " In full version, this would create a payment with this quote"
+                with st.spinner("Fetching live FX rate..."):
+                    quote, error = fx_service.request_quote(
+                        company_id=st.session_state.company_id,
+                        from_currency=from_currency,
+                        to_currency=to_currency,
+                        amount=Decimal(str(amount)),
+                        user_id=st.session_state.user_id,
                     )
 
-            with col2:
-                if st.button(" Refresh Quote", use_container_width=True):
-                    st.session_state.current_quote = None
-                    st.session_state.quote_expiry = None
-                    st.rerun()
+                    if error:
+                        st.error(f"Error requesting quote: {error}")
+                    else:
+                        st.success(f" Quote received! Valid for 120 seconds")
+                        st.rerun()
 
-            # Transparency message
-            st.markdown("---")
-            st.success("""
-             **Transparent Pricing**
-            
-            We show you exactly how we calculate your rate:
-            - Base rate from live market data
-            - Our markup clearly displayed (0.5%)
-            - All fees shown upfront
-            - No hidden charges
-            """)
+    st.markdown("---")
 
-            # Auto-refresh to update countdown
-            time.sleep(1)
-            st.rerun()
+    # Display active quotes
+    st.subheader(" Active Quotes")
+
+    active_quotes = fx_service.get_active_quotes(st.session_state.company_id)
+
+    if active_quotes:
+        for quote in active_quotes:
+            # Check if still valid
+            time_remaining = fx_service.get_quote_time_remaining(quote)
+            is_valid = time_remaining > 0
+
+            # Create expander for each quote
+            status_icon = "✓" if is_valid else "⏱"
+            expander_label = f"{status_icon} {quote.source_currency} → {quote.target_currency} | Rate: {quote.final_rate} | Expires in: {time_remaining}s"
+
+            with st.expander(expander_label, expanded=is_valid):
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.markdown("**Quote Details**")
+                    st.text(f"Quote ID: {quote.quote_id}")
+                    st.text(f"From: {quote.source_currency}")
+                    st.text(f"To: {quote.target_currency}")
+                    st.text(f"Created: {quote.created_at.strftime('%H:%M:%S')}")
+
+                with col2:
+                    st.markdown("**Rate Breakdown**")
+                    breakdown = fx_service.get_rate_breakdown(quote)
+                    st.text(f"Base Rate: {breakdown['base_rate']}")
+                    st.text(f"Markup: {breakdown['markup_percentage']}%")
+                    st.text(f"Final Rate: {breakdown['final_rate']}")
+                    st.text(f"Inverse: {breakdown['inverse_rate']}")
+
+                with col3:
+                    st.markdown("**Example Conversion**")
+                    example_amount = Decimal("1000.00")
+                    calc = fx_service.calculate_amount(quote, example_amount)
+                    st.text(f"Amount: {calc['source_amount']} {quote.source_currency}")
+                    st.text(
+                        f"Converts to: {calc['target_amount']} {quote.target_currency}"
+                    )
+                    st.text(f"Markup Fee: {calc['markup_fee']} {quote.target_currency}")
+
+                # Expiry status
+                if is_valid:
+                    progress_value = time_remaining / 120.0
+                    st.progress(
+                        progress_value, text=f"Valid for {time_remaining} more seconds"
+                    )
+                else:
+                    st.error(" Quote expired")
+
+                # Auto-refresh countdown
+                if is_valid and time_remaining > 0:
+                    # Use empty placeholder for countdown
+                    st.caption("Page will auto-refresh to update countdown")
 
     else:
-        st.info(" Request a quote to see live FX rates and pricing breakdown")
+        st.info("No active quotes. Request a quote above to get started.")
 
-        st.markdown("---")
+    # Add auto-refresh for active quotes
+    if active_quotes and any(
+        fx_service.get_quote_time_remaining(q) > 0 for q in active_quotes
+    ):
+        time.sleep(5)  # Refresh every 5 seconds
+        st.rerun()
 
-        st.markdown("** How it works:**")
-        st.markdown("""
-        1. **Select currencies** - Choose source and target currencies
-        2. **Enter amount** - Specify how much you want to send or receive
-        3. **Get instant quote** - See live rate with full breakdown
-        4. **Quote valid for 2 minutes** - Lock in the rate by creating a payment
-        5. **Transparent pricing** - All fees and markups clearly shown
-        """)
+    st.markdown("---")
 
-        st.markdown("---")
+    # Recent quotes history
+    st.subheader(" Recent Quotes (Last 7 Days)")
 
-        st.markdown("** Supported Currencies:**")
+    recent_quotes = fx_service.get_company_quotes(
+        st.session_state.company_id, include_expired=True
+    )[:20]
 
-        currencies_df = pd.DataFrame(
-            {
-                "Currency": ["GBP", "EUR", "USD", "CHF"],
-                "Name": ["British Pound", "Euro", "US Dollar", "Swiss Franc"],
-                "Status": [
-                    " Available",
-                    " Available",
-                    " Available",
-                    " Available",
-                ],
-            }
-        )
+    if recent_quotes:
+        quote_list = []
+        for quote in recent_quotes:
+            is_valid = fx_service.is_quote_valid(quote)
+            quote_list.append(
+                {
+                    "Quote ID": quote.quote_id[:20] + "...",
+                    "Currency Pair": f"{quote.source_currency}/{quote.target_currency}",
+                    "Rate": f"{quote.final_rate}",
+                    "Markup": f"{quote.markup_percentage * 100:.2f}%",
+                    "Status": "Active" if is_valid else "Expired",
+                    "Created": quote.created_at.strftime("%Y-%m-%d %H:%M"),
+                    "Expires": quote.quote_expires_at.strftime("%H:%M:%S"),
+                }
+            )
 
-        st.dataframe(currencies_df, use_container_width=True, hide_index=True)
+        df = pd.DataFrame(quote_list)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No recent quotes found.")
 
-# Recent quotes section
-st.markdown("---")
-st.subheader(" Recent Quotes")
+    # Statistics
+    st.markdown("---")
+    st.subheader(" Statistics (Last 30 Days)")
 
-recent_quotes_data = pd.DataFrame(
-    {
-        "Quote ID": [
-            "QT-20260111103045",
-            "QT-20260111095230",
-            "QT-20260111091520",
-            "QT-20260110163045",
-        ],
-        "From": ["GBP", "GBP", "EUR", "GBP"],
-        "To": ["EUR", "USD", "GBP", "EUR"],
-        "Amount": ["£10,000.00", "£25,000.00", "€5,000.00", "£15,000.00"],
-        "Rate": ["1.1707", "1.2916", "0.8565", "1.1695"],
-        "Status": ["Used", "Expired", "Used", "Used"],
-        "Created": [
-            "2026-01-11 10:30",
-            "2026-01-11 09:52",
-            "2026-01-11 09:15",
-            "2026-01-10 16:30",
-        ],
-    }
-)
+    stats = fx_service.get_quote_statistics(st.session_state.company_id, days=30)
 
-st.dataframe(
-    recent_quotes_data,
-    use_container_width=True,
-    hide_index=True,
-    column_config={
-        "Status": st.column_config.TextColumn("Status", help="Quote usage status")
-    },
-)
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Total Quotes", stats["total_quotes"])
+
+    with col2:
+        st.metric("Active Quotes", stats["active_quotes"])
+
+    with col3:
+        st.metric("Expired Quotes", stats["expired_quotes"])
+
+    with col4:
+        st.metric("Currency Pairs", len(stats["currency_pairs"]))
+
+    if stats["currency_pairs"]:
+        st.markdown("**Popular Currency Pairs:**")
+        st.write(", ".join(stats["currency_pairs"]))
+
+finally:
+    db.close()
 
 # Sidebar info
 with st.sidebar:
@@ -308,15 +212,14 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.markdown("** FX Quote Tips**")
-    st.caption("• Quotes are valid for 2 minutes")
-    st.caption("• Lock rate by creating payment immediately")
+    st.markdown("** FX Quote Info**")
+    st.caption("• Quotes are valid for 120 seconds")
+    st.caption(f"• Markup applied: {fx_service.markup_percentage * 100:.2f}%")
     st.caption("• Rates update in real-time")
-    st.caption("• All fees shown transparently")
+    st.caption("• Page auto-refreshes for active quotes")
 
     st.markdown("---")
 
-    st.markdown("** Today's Market**")
-    st.metric("GBP/EUR", "1.1650", "+0.15%")
-    st.metric("GBP/USD", "1.2850", "-0.08%")
-    st.metric("EUR/USD", "1.1025", "+0.05%")
+    st.markdown("** Supported Currencies**")
+    currencies_display = ", ".join(sorted(fx_service.get_supported_currencies()))
+    st.caption(currencies_display)
