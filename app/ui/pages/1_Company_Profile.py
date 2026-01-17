@@ -4,6 +4,9 @@ Company Profile Management Page
 
 import streamlit as st
 from datetime import datetime
+from app.database.connection import SessionLocal
+from app.services.company_service import CompanyService
+from app.repositories.user_repository import UserRepository
 
 st.set_page_config(page_title="Company Profile", page_icon="", layout="wide")
 
@@ -15,235 +18,225 @@ if not st.session_state.get("authenticated", False):
 st.title(" Company Profile")
 st.markdown("---")
 
-# Tabs for different sections
-tab1, tab2 = st.tabs([" Company Details", " User Management"])
+# Get database session
+db = SessionLocal()
 
-with tab1:
-    st.subheader("Company Information")
+try:
+    # Get company data
+    company_service = CompanyService(db)
+    company = company_service.get_company(st.session_state.company_id)
 
-    col1, col2 = st.columns(2)
+    if not company:
+        st.error("Company profile not found")
+        st.stop()
 
-    with col1:
-        company_name = st.text_input(
-            "Company Name *",
-            value="UK SMB Trading Ltd",
-            disabled=(st.session_state.user_role != "admin"),
-        )
+    # Tabs for different sections
+    tab1, tab2 = st.tabs([" Company Details", " User Management"])
 
-        registered_country = st.selectbox(
-            "Registered Country *",
-            options=[
-                "GB - United Kingdom",
-                "DE - Germany",
-                "FR - France",
-                "ES - Spain",
-                "IT - Italy",
-            ],
-            disabled=(st.session_state.user_role != "admin"),
-        )
+    with tab1:
+        st.subheader("Company Information")
 
-        industry_sector = st.selectbox(
-            "Industry Sector",
-            options=[
-                "Import/Export",
-                "Manufacturing",
-                "Technology",
-                "Consulting",
-                "Retail",
-                "Wholesale",
-                "Other",
-            ],
-            disabled=(st.session_state.user_role != "admin"),
-        )
+        col1, col2 = st.columns(2)
 
-    with col2:
-        fx_volume_band = st.selectbox(
-            "Expected FX Volume Band",
-            options=[
-                "Small (< £100k/month)",
-                "Medium (£100k - £500k/month)",
-                "Large (> £500k/month)",
-            ],
-            index=1,
-            disabled=(st.session_state.user_role != "admin"),
-        )
+        # Country mapping
+        country_map = {
+            "GB": "GB - United Kingdom",
+            "DE": "DE - Germany",
+            "FR": "FR - France",
+            "ES": "ES - Spain",
+            "IT": "IT - Italy",
+        }
 
-        company_reg_number = st.text_input(
-            "Company Registration Number",
-            value="12345678",
-            disabled=(st.session_state.user_role != "admin"),
-        )
+        country_reverse_map = {v: k for k, v in country_map.items()}
 
-        vat_number = st.text_input(
-            "VAT Number",
-            value="GB123456789",
-            disabled=(st.session_state.user_role != "admin"),
-        )
+        # Industry sector mapping
+        industry_options = [
+            "Import/Export",
+            "Manufacturing",
+            "Technology",
+            "Consulting",
+            "Retail",
+            "Wholesale",
+            "Other",
+        ]
 
-    st.markdown("---")
+        # FX volume band mapping
+        fx_volume_map = {
+            "small": "Small (< £100k/month)",
+            "medium": "Medium (£100k - £500k/month)",
+            "large": "Large (> £500k/month)",
+        }
 
-    st.subheader("Contact Information")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        contact_name = st.text_input(
-            "Primary Contact Name",
-            value="John Smith",
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-        contact_email = st.text_input(
-            "Contact Email",
-            value="contact@uksmb.com",
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-    with col2:
-        contact_phone = st.text_input(
-            "Contact Phone",
-            value="+44 20 1234 5678",
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-        website = st.text_input(
-            "Website",
-            value="https://www.uksmb.com",
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-    st.markdown("---")
-
-    st.subheader("Business Address")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        address_line1 = st.text_input(
-            "Address Line 1",
-            value="123 Business Street",
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-        address_line2 = st.text_input(
-            "Address Line 2",
-            value="Suite 456",
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-        city = st.text_input(
-            "City", value="London", disabled=(st.session_state.user_role != "admin")
-        )
-
-    with col2:
-        postcode = st.text_input(
-            "Postcode",
-            value="EC1A 1BB",
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-        country = st.selectbox(
-            "Country",
-            options=["United Kingdom", "Germany", "France", "Spain", "Italy"],
-            disabled=(st.session_state.user_role != "admin"),
-        )
-
-    st.markdown("---")
-
-    if st.session_state.user_role == "admin":
-        col1, col2, col3 = st.columns([1, 1, 4])
+        fx_volume_reverse_map = {v: k for k, v in fx_volume_map.items()}
 
         with col1:
-            if st.button(" Save Changes", use_container_width=True):
-                st.success(" Company profile updated successfully!")
+            company_name = st.text_input(
+                "Company Name *",
+                value=company.company_name,
+                disabled=(st.session_state.user_role != "admin"),
+                key="company_name",
+            )
+
+            current_country = country_map.get(
+                company.registered_country, "GB - United Kingdom"
+            )
+            registered_country = st.selectbox(
+                "Registered Country *",
+                options=list(country_map.values()),
+                index=list(country_map.values()).index(current_country),
+                disabled=(st.session_state.user_role != "admin"),
+                key="registered_country",
+            )
+
+            current_industry = company.industry_sector or "Import/Export"
+            industry_sector = st.selectbox(
+                "Industry Sector",
+                options=industry_options,
+                index=industry_options.index(current_industry)
+                if current_industry in industry_options
+                else 0,
+                disabled=(st.session_state.user_role != "admin"),
+                key="industry_sector",
+            )
 
         with col2:
-            if st.button(" Reset", use_container_width=True):
-                st.info("Form reset to saved values")
-    else:
-        st.info("ℹ Only Admin users can edit company profile")
-
-with tab2:
-    st.subheader("User Management")
-
-    if st.session_state.user_role == "admin":
-        col1, col2 = st.columns([3, 1])
-
-        with col2:
-            if st.button(" Add New User", use_container_width=True):
-                st.info("Add user dialog would open here")
+            current_fx_volume = fx_volume_map.get(
+                company.fx_volume_band, "Medium (£100k - £500k/month)"
+            )
+            fx_volume_band = st.selectbox(
+                "Expected FX Volume Band",
+                options=list(fx_volume_map.values()),
+                index=list(fx_volume_map.values()).index(current_fx_volume),
+                disabled=(st.session_state.user_role != "admin"),
+                key="fx_volume_band",
+            )
 
         st.markdown("---")
 
-        # User list
-        import pandas as pd
-
-        users_data = pd.DataFrame(
-            {
-                "Full Name": [
-                    "Admin User",
-                    "Maker User",
-                    "Approver User",
-                    "Finance Manager",
-                ],
-                "Email": [
-                    "admin@uksmb.com",
-                    "maker@uksmb.com",
-                    "approver@uksmb.com",
-                    "finance@uksmb.com",
-                ],
-                "Role": ["Admin", "Maker", "Approver", "Maker"],
-                "Status": ["Active", "Active", "Active", "Active"],
-                "Last Login": [
-                    "2026-01-11 09:30",
-                    "2026-01-11 10:15",
-                    "2026-01-10 16:45",
-                    "2026-01-09 14:20",
-                ],
-            }
-        )
-
-        st.dataframe(users_data, use_container_width=True, hide_index=True)
+        # Display metadata
+        col1, col2 = st.columns(2)
+        with col1:
+            st.caption(f"Created: {company.created_at.strftime('%Y-%m-%d %H:%M')}")
+        with col2:
+            st.caption(f"Last Updated: {company.updated_at.strftime('%Y-%m-%d %H:%M')}")
 
         st.markdown("---")
 
-        st.subheader("Role Permissions")
+        if st.session_state.user_role == "admin":
+            col1, col2, col3 = st.columns([1, 1, 4])
 
-        col1, col2, col3 = st.columns(3)
+            with col1:
+                if st.button(
+                    " Save Changes", use_container_width=True, key="save_company"
+                ):
+                    try:
+                        # Update company data
+                        updated_data = {
+                            "company_name": company_name,
+                            "registered_country": country_reverse_map[
+                                registered_country
+                            ],
+                            "industry_sector": industry_sector,
+                            "fx_volume_band": fx_volume_reverse_map[fx_volume_band],
+                        }
 
-        with col1:
-            st.info("** Admin**")
-            st.markdown("""
-            - Manage company profile
-            - Add/edit users
-            - View all reports
-            - Full system access
-            """)
+                        company_service.update_company(
+                            company.id, updated_data, st.session_state.user_id
+                        )
 
-        with col2:
-            st.info("** Maker**")
-            st.markdown("""
-            - Create payments
-            - Manage beneficiaries
-            - Request FX quotes
-            - Cannot approve payments
-            """)
+                        st.success(" Company profile updated successfully!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error updating company: {str(e)}")
 
-        with col3:
-            st.info("** Approver**")
-            st.markdown("""
-            - Approve/reject payments
-            - View payment details
-            - Add comments
-            - Cannot create payments
-            """)
+            with col2:
+                if st.button(
+                    " Refresh", use_container_width=True, key="refresh_company"
+                ):
+                    st.rerun()
+        else:
+            st.info("ℹ Only Admin users can edit company profile")
 
-    else:
-        st.warning(" Only Admin users can manage users")
-        st.info("Contact your administrator to add or modify user accounts")
+    with tab2:
+        st.subheader("User Management")
+
+        if st.session_state.user_role == "admin":
+            # Get user repository
+            user_repo = UserRepository(db)
+            users = user_repo.get_by_company(st.session_state.company_id)
+
+            col1, col2 = st.columns([3, 1])
+
+            with col2:
+                if st.button(" Add New User", use_container_width=True, key="add_user"):
+                    st.info("Add user functionality coming in future phase")
+
+            st.markdown("---")
+
+            # Display users
+            if users:
+                import pandas as pd
+
+                users_data = pd.DataFrame(
+                    [
+                        {
+                            "Full Name": user.full_name,
+                            "Email": user.email,
+                            "Role": user.role.title(),
+                            "Status": "Active" if user.is_active else "Inactive",
+                            "Created": user.created_at.strftime("%Y-%m-%d"),
+                        }
+                        for user in users
+                    ]
+                )
+
+                st.dataframe(users_data, use_container_width=True, hide_index=True)
+            else:
+                st.info("No users found")
+
+            st.markdown("---")
+
+            st.subheader("Role Permissions")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.info("** Admin**")
+                st.markdown("""
+                - Manage company profile
+                - Add/edit users
+                - View all reports
+                - Full system access
+                """)
+
+            with col2:
+                st.info("** Maker**")
+                st.markdown("""
+                - Create payments
+                - Manage beneficiaries
+                - Request FX quotes
+                - Cannot approve payments
+                """)
+
+            with col3:
+                st.info("** Approver**")
+                st.markdown("""
+                - Approve/reject payments
+                - View payment details
+                - Add comments
+                - Cannot create payments
+                """)
+
+        else:
+            st.warning(" Only Admin users can manage users")
+            st.info("Contact your administrator to add or modify user accounts")
+
+finally:
+    db.close()
 
 # Sidebar info
 with st.sidebar:
     st.info(f"**Logged in as:** {st.session_state.user_name}")
     st.caption(f"Role: {st.session_state.user_role.title()}")
-    st.caption(f"Company: UK SMB Trading Ltd")
+    if company:
+        st.caption(f"Company: {company.company_name}")

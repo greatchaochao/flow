@@ -4,6 +4,9 @@ Main Streamlit application entry point.
 
 import streamlit as st
 from app.config import config
+from app.database.connection import SessionLocal
+from app.services.auth_service import AuthService
+from app.services.audit_service import AuditService
 
 # Page configuration
 st.set_page_config(
@@ -24,6 +27,8 @@ if "company_id" not in st.session_state:
     st.session_state.company_id = None
 if "user_name" not in st.session_state:
     st.session_state.user_name = None
+if "user_email" not in st.session_state:
+    st.session_state.user_email = None
 
 # Main page
 st.title(" Flow Payment Platform")
@@ -105,33 +110,33 @@ if not st.session_state.authenticated:
 
             if submit:
                 if email and password:
-                    # Mock authentication - just check if email matches demo users
-                    if email in [
-                        "admin@uksmb.com",
-                        "maker@uksmb.com",
-                        "approver@uksmb.com",
-                    ]:
-                        st.session_state.authenticated = True
-                        st.session_state.user_id = 1
-                        st.session_state.company_id = 1
+                    # Real database authentication
+                    db = SessionLocal()
+                    try:
+                        auth_service = AuthService(db)
+                        user = auth_service.authenticate(email, password)
 
-                        # Set role based on email
-                        if "admin" in email:
-                            st.session_state.user_role = "admin"
-                            st.session_state.user_name = "Admin User"
-                        elif "maker" in email:
-                            st.session_state.user_role = "maker"
-                            st.session_state.user_name = "Maker User"
-                        elif "approver" in email:
-                            st.session_state.user_role = "approver"
-                            st.session_state.user_name = "Approver User"
+                        if user:
+                            # Set session state
+                            st.session_state.authenticated = True
+                            st.session_state.user_id = user.id
+                            st.session_state.user_role = user.role
+                            st.session_state.company_id = user.company_id
+                            st.session_state.user_name = user.full_name
+                            st.session_state.user_email = user.email
 
-                        st.success(f"Logged in as {st.session_state.user_role}")
-                        st.rerun()
-                    else:
-                        st.error(
-                            "Invalid credentials. Use demo accounts shown on main page."
-                        )
+                            # Log the login
+                            audit_service = AuditService(db)
+                            audit_service.log_login(user.id)
+
+                            st.success(f"Logged in as {user.role.title()}")
+                            st.rerun()
+                        else:
+                            st.error("Invalid email or password")
+                    except Exception as e:
+                        st.error(f"Login error: {str(e)}")
+                    finally:
+                        db.close()
                 else:
                     st.error("Please enter both email and password")
 else:
@@ -237,15 +242,51 @@ else:
 
     # Logout button in sidebar
     if st.sidebar.button(" Logout", use_container_width=True):
+        # Log the logout
+        if st.session_state.user_id:
+            db = SessionLocal()
+            try:
+                audit_service = AuditService(db)
+                audit_service.log_logout(st.session_state.user_id)
+            finally:
+                db.close()
+
+        # Clear session state
         st.session_state.authenticated = False
         st.session_state.user_id = None
         st.session_state.user_role = None
         st.session_state.company_id = None
         st.session_state.user_name = None
+        st.session_state.user_email = None
         st.rerun()
 
 # Sidebar info
 with st.sidebar:
+    if st.session_state.authenticated:
+        st.divider()
+        st.info(f"**{st.session_state.user_name}**")
+        st.caption(f"Role: {st.session_state.user_role.title()}")
+        st.caption(f"Email: {st.session_state.user_email}")
+
+        st.divider()
+
+        # Role-specific navigation hints
+        if st.session_state.user_role == "admin":
+            st.markdown("**Admin Access:**")
+            st.markdown("- Company Profile")
+            st.markdown("- All Reports")
+            st.markdown("- User Management")
+        elif st.session_state.user_role == "maker":
+            st.markdown("**Maker Access:**")
+            st.markdown("- Create Payments")
+            st.markdown("- Manage Beneficiaries")
+            st.markdown("- Request FX Quotes")
+        elif st.session_state.user_role == "approver":
+            st.markdown("**Approver Access:**")
+            st.markdown("- Review Payments")
+            st.markdown("- Approve/Reject")
+            st.markdown("- View History")
+
     st.divider()
     st.caption(f"Environment: {config.ENVIRONMENT}")
     st.caption(f"Version: 0.1.0")
