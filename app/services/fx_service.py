@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.repositories.fx_repository import FXQuoteRepository
 from app.repositories.audit_repository import AuditRepository
-from app.integrations.fx_provider import MockFXProvider
+from app.integrations.fx_provider import MockFXProvider, FixerIOProvider
 from app.database.models import FXQuote
 from app.config import config
 
@@ -20,9 +20,30 @@ class FXService:
         self.db = db
         self.fx_repo = FXQuoteRepository(db)
         self.audit_repo = AuditRepository(db)
-        self.fx_provider = MockFXProvider(
-            api_key=config.FX_PROVIDER_API_KEY, api_url=config.FX_PROVIDER_API_URL
-        )
+
+        # Use Fixer.io if API key is configured, otherwise fall back to mock
+        if config.FX_PROVIDER_API_KEY:
+            try:
+                self.fx_provider = FixerIOProvider(
+                    api_key=config.FX_PROVIDER_API_KEY,
+                    base_url=config.FX_PROVIDER_API_URL or "http://data.fixer.io/api",
+                )
+                self.provider_name = "Fixer.io"
+            except ValueError as e:
+                print(
+                    f"Failed to initialize Fixer.io provider: {e}. Falling back to mock."
+                )
+                self.fx_provider = MockFXProvider(
+                    api_key=config.FX_PROVIDER_API_KEY,
+                    api_url=config.FX_PROVIDER_API_URL,
+                )
+                self.provider_name = "Mock"
+        else:
+            self.fx_provider = MockFXProvider(
+                api_key=config.FX_PROVIDER_API_KEY, api_url=config.FX_PROVIDER_API_URL
+            )
+            self.provider_name = "Mock"
+
         self.markup_percentage = Decimal(str(config.FX_MARKUP_PERCENTAGE))
 
     def get_live_rate(
@@ -69,6 +90,13 @@ class FXService:
             provider_quote = self.fx_provider.get_quote(
                 from_currency, to_currency, amount, validity_seconds
             )
+
+            # Check if provider returned a valid quote
+            if provider_quote is None:
+                return (
+                    None,
+                    "Unable to fetch FX quote from provider. Please try again later.",
+                )
 
             # Calculate rate with markup
             base_rate = provider_quote["rate"]

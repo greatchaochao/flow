@@ -18,13 +18,23 @@ if not st.session_state.get("authenticated", False):
     st.stop()
 
 st.title(" FX Quotes")
-st.markdown("---")
 
 # Get database session
 db = SessionLocal()
 
 try:
     fx_service = FXService(db)
+
+    # Show provider info
+    provider_info = getattr(fx_service, "provider_name", "Unknown")
+    if provider_info == "Mock":
+        st.info(
+            "ℹ️ Using **Mock FX Provider** for testing. Configure `FX_PROVIDER_API_KEY` in `.env` to use Fixer.io for real rates."
+        )
+    else:
+        st.success(f"✓ Using **{provider_info}** for delayed FX rates (~60 min delay)")
+
+    st.markdown("---")
 
     # Get supported currencies
     currencies = fx_service.get_supported_currencies()

@@ -63,17 +63,21 @@ The PoC focuses on:
 
 ### Completed
 -  Complete UI implementation with Streamlit
--  All 7 pages functional with mock data
+-  Database integration with PostgreSQL
+-  Real authentication system (bcrypt password hashing)
 -  Role-based access control (Admin, Maker, Approver)
--  Mock authentication and session management
--  Database schema designed (SQLAlchemy models)
--  Project structure and configuration
+-  Company profile management with audit logging
+-  Beneficiary management with IBAN/SWIFT validation
+-  **FX quote integration with Fixer.io API (delayed rates)**
+-  Automatic fallback to mock provider for testing
+-  Database schema with Alembic migrations
+-  Seed data for demo users and company
+
+ **FX Rates:** Using [Fixer.io API](https://fixer.io) for real delayed rates (~60 min). See [FIXER_IO_SETUP.md](FIXER_IO_SETUP.md) for configuration.
 
 ### In Progress
--  Backend service layer implementation
--  Database integration
--  Real authentication system
--  FX provider API integration
+-  Payment creation workflow
+-  Maker-checker approval system
 -  Payment provider API integration
 
 ---
