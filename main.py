@@ -217,16 +217,16 @@ else:
         st.subheader(" Quick Actions")
 
         if st.button(" Request FX Quote", use_container_width=True):
-            st.info("Navigate to FX Quotes page →")
+            st.switch_page("pages/3_FX_Quotes.py")
 
         if st.button(" Create Payment", use_container_width=True):
-            st.info("Navigate to Payments page →")
+            st.switch_page("pages/4_Payments.py")
 
         if st.button(" Add Beneficiary", use_container_width=True):
-            st.info("Navigate to Beneficiaries page →")
+            st.switch_page("pages/2_Beneficiaries.py")
 
         if st.button(" View Reports", use_container_width=True):
-            st.info("Navigate to Reports page →")
+            st.switch_page("pages/6_Reports.py")
 
     st.markdown("---")
 
